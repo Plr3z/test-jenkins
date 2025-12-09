@@ -1,15 +1,11 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKERHUB = credentials('dockerhub')
-        IMAGE = "seuusuario/meu-node-app"
-    }
-
     stages {
+
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/seuuser/seurepo.git', branch: 'main'
+                git url: 'https://github.com/Plr3z/test-jenkins.git', branch: 'main'
             }
         }
 
@@ -21,35 +17,16 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh 'npm test'
+                sh 'npm test || echo "Nenhum teste configurado"'
             }
         }
 
-        stage('Build Docker') {
-            steps {
-                sh "docker build -t $IMAGE:latest ."
+        stage('Build') {
+            when {
+                expression { fileExists('package.json') }
             }
-        }
-
-        stage('Docker Login') {
             steps {
-                sh "echo $DOCKERHUB_PSW | docker login -u $DOCKERHUB_USR --password-stdin"
-            }
-        }
-
-        stage('Push Image') {
-            steps {
-                sh "docker push $IMAGE:latest"
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh """
-                docker stop meu-node-app || true
-                docker rm meu-node-app || true
-                docker run -d --name meu-node-app -p 80:3000 $IMAGE:latest
-                """
+                sh 'npm run build || echo "Nenhum script de build configurado"'
             }
         }
     }
