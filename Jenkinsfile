@@ -1,14 +1,12 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
+    tools {
+        nodejs 'node-24.11.1'
+    }
 
-        stage('Install Dependencies') {
+    stages {
+        stage('Install') {
             steps {
                 sh 'npm install'
             }
