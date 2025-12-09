@@ -1,15 +1,10 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18'
-        }
-    }
+    agent any
 
     stages {
-
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/Plr3z/test-jenkins.git', branch: 'main'
+                checkout scm
             }
         }
 
@@ -19,18 +14,15 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Build') {
             steps {
-                sh 'npm test || echo "Nenhum teste configurado"'
+                sh 'npm run build'
             }
         }
 
-        stage('Build') {
-            when {
-                expression { fileExists('package.json') }
-            }
+        stage('Test') {
             steps {
-                sh 'npm run build || echo "Nenhum script de build configurado"'
+                sh 'npm test'
             }
         }
     }
