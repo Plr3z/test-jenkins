@@ -2,53 +2,50 @@ pipeline {
     agent any
 
     tools {
-        [cite_start]nodejs 'node 24.11.1' // Garante que a ferramenta Node.js esteja configurada [cite: 1]
+        nodejs 'node 24.11.1' // Ferramenta Node.js
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                [cite_start]// Clona o código-fonte do repositório Git [cite: 1]
+                // Clona o código-fonte do repositório Git
                 git url: 'https://github.com/Plr3z/test-jenkins.git', branch: 'main'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                [cite_start]// Instala todas as dependências [cite: 2]
+                // Instala todas as dependências
                 sh 'npm install'
             }
         }
 
         stage('Test') {
             steps {
-                [cite_start]// Executa os testes (ou a mensagem de teste padrão) [cite: 3]
+                // Executa os testes
                 sh 'npm test || echo "Nenhum teste configurado"'
             }
         }
 
-        stage('Clean Build') {
-            // Este stage prepara o ambiente para o empacotamento final
+        stage('Clean Dependencies') {
+            // Remove dependências que não são necessárias em produção
             steps {
-                sh 'echo "Limpando dependências de desenvolvimento para o artefato..."'
-                // Remove dependências de desenvolvimento (se houver, com o package.json atual, não fará muita diferença)
+                sh 'echo "Limpando dependências de desenvolvimento..."'
                 sh 'npm prune --production' 
             }
         }
         
-        // NOVO STAGE: Criação e Arquivamento do Artefato
         stage('Package Artifact') {
             steps {
                 script {
                     def artifactName = "node-app-${env.BUILD_ID}.zip"
                     
-                    // Comprime os arquivos essenciais (código-fonte e dependências de produção)
-                    // Excluímos node_modules, pois ele contém dependências dev que 'npm prune' não removeu.
-                    // ATENÇÃO: Se o 'npm prune --production' falhar ou for insuficiente, você pode ter que incluir 'node_modules' no zip.
-                    sh "zip -r ${artifactName} . -x node_modules/*"
+                    // Comprime os arquivos essenciais. 
+                    // Exclui arquivos de controle Git e o próprio zip para não duplicar.
+                    sh "zip -r ${artifactName} . -x .git/* *.zip"
                     
-                    // Arquiva o arquivo ZIP para que ele possa ser baixado na página do Jenkins
+                    // Arquiva o arquivo ZIP para que ele possa ser baixado diretamente na página do Job no Jenkins.
                     archiveArtifacts artifacts: "${artifactName}", fingerprint: true
                     
                     sh "echo '📦 Artefato de Build criado e arquivado: ${artifactName}'"
